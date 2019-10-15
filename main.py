@@ -1,34 +1,54 @@
-import pandas, os
+import pandas
 import csv
-# from time import sleep
-# from random import uniform
-import geocoder
 import geopy
-from geopy.geocoders import Yandex
+# from geopy.exc import GeocoderTimedOut
+from geopy.geocoders import Nominatim
+from time import sleep
+from random import uniform
+from geopy.extra.rate_limiter import RateLimiter
 
+def get_column_name():
+    with open('cmc3.csv', 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter='\t')
+        col0 = 'Адрес'
+        col1 = 'Координаты'
+
+        writer.writerow((col0,
+                        col1))
 
 def write_csv(data):
-    with open('cmc3.csv', 'a', newline='') as f:
+    with open('cmc3.csv', 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter='\t')
-        writer.writerow((data['address'], data['coord']))
+        writer.writerow((data['address'], data['coordinates']))
 
 def main():
-    df1 = pandas.read_csv('cmc.csv', encoding='utf-8')
-    nom = Yandex(api_key="e3523b18-24d4-44fd-aaf5-f6a2c2cfb0d0", timeout=5)
-    # df1["coordinates"] = df1["Адрес"].apply(nom.geocode)
-    df1["coordinates"] = df1["Адрес"][0:10].apply(nom.geocode)
-
-    lenCoord = len(df1["coordinates"]) - 1
+    get_column_name()
+    df = pandas.read_csv('cmc.csv', encoding='utf-8')
+    nom = Nominatim(user_agent="Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 YaBrowser/19.9.3.314 Yowser/2.5 Safari/537.36")
+    
+    a = 3
     i = 0
-    while i < 10: #lenCoord
-        lt = df1["coordinates"][i].latitude
-        ln = df1["coordinates"][i].longitude
-        address = df1["coordinates"][i]
-        coord = str(lt) + ', ' + str(ln)
-        print(i, address, lt, ln)
-        i = i + 1
-        data = {'address': address, 'coord': coord}
-        write_csv(data) 
+    while a <= 50: #len(df) + 1
+        sleep(uniform(1,3))
+        geocode = RateLimiter(nom.geocode, min_delay_seconds=1)
+        while i < a:
+            # df.iat[i,3] i - строки и 3 столбец
+            geocoder_result = nom.geocode(df.iat[i,3], timeout=10)
+            try:
+                
+                address = geocoder_result.address
+                coordinates = str(geocoder_result.latitude) + ', ' + str(geocoder_result.longitude)
+                data = {'address': address, 'coordinates': coordinates}
+                write_csv(data) 
+            except:
+                lat = None
+                lon = None
+                address = None
+                coordinates = str(lat) + ', ' + str(lon)
+                data = {'address': address, 'coordinates': coordinates}
+                write_csv(data)
+            i = i + 1
+        a = a + 3
 
 if __name__ == '__main__':
     main()
