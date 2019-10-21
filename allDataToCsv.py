@@ -1,7 +1,7 @@
 import csv
 
 def write_csv(data):
-    with open('allData.csv', 'a', newline='', encoding='utf-8') as f:
+    with open('allData-w1251.csv', 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow((data['url'],
                         data['address'],
@@ -11,6 +11,7 @@ def write_csv(data):
                         data['square'],
                         data['floor'],
                         data['floor_in_building'],
+                        data['district'],
                         data['year_building'],
                         data['child_yard'],
                         data['emergency_house'],
